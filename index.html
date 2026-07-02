@@ -207,12 +207,12 @@
         </div>
       </div>
 
-      <div class="spec">작업 58 × 90 mm · 재단 54 × 86 mm · 300 DPI</div>
+      <div class="spec">작업 58 × 90 mm · 재단 54 × 86 mm · 600 DPI</div>
       <label class="gtoggle"><input type="checkbox" id="trimToggle"> 재단 가이드 표시</label>
 
       <button class="dl" id="download">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m0 0 4-4m-4 4-4-4M4 20h16"/></svg>
-        PNG 저장 · 300DPI
+        PNG 저장 · 600DPI
       </button>
       <div class="foot" id="foot"></div>
     </div>
@@ -294,8 +294,8 @@ const TYPES={sentinel:{ko:'센티넬',en:'SENTINEL',hanja:'戰衛',code:'SN'},gu
 const RANKS=[
   {code:'SS',ko:'키스톤',grade:'SS급'},
   {code:'S',ko:'세인트',grade:'S급'},
-  {code:'A',ko:'에이전트',grade:'A급'},
-  {code:'B',ko:'에이전트',grade:'B급'},
+  {code:'A',ko:'에이전트 A',grade:'A급'},
+  {code:'B',ko:'에이전트 B',grade:'B급'},
   {code:'C',ko:'캔디데이트',grade:'C급'},
 ];
 const DEPTS=[
@@ -437,7 +437,7 @@ dl.onclick=async()=>{
   card.classList.remove('show-trim');
   try{
     if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-    const canvas=await html2canvas(card,{scale:2,backgroundColor:'#0B0C0F',useCORS:true,logging:false});
+    const canvas=await html2canvas(card,{scale:4,backgroundColor:'#0B0C0F',useCORS:true,logging:false,imageTimeout:0});
     const a=document.createElement('a');
     a.download=`PLX_${(S.name.trim()||'unregistered').replace(/[^\w가-힣]+/g,'_')}_58x90.png`;
     a.href=canvas.toDataURL('image/png');a.click();foot(`저장 완료 · ${canvas.width}×${canvas.height}px`);
