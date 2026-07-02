@@ -163,7 +163,6 @@
   </header>
 
   <div class="layout">
-    <!-- STAGE -->
     <div class="stage">
       <div class="stage-cap">— Preview —</div>
       <div class="card-wrap">
@@ -207,17 +206,16 @@
         </div>
       </div>
 
-      <div class="spec">작업 58 × 90 mm · 재단 54 × 86 mm · 600 DPI</div>
+      <div class="spec">작업 58 × 90 mm · 재단 54 × 86 mm · 300 DPI</div>
       <label class="gtoggle"><input type="checkbox" id="trimToggle"> 재단 가이드 표시</label>
 
       <button class="dl" id="download">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m0 0 4-4m-4 4-4-4M4 20h16"/></svg>
-        PNG 저장 · 600DPI
+        PNG 저장 · HQ
       </button>
       <div class="foot" id="foot"></div>
     </div>
 
-    <!-- FORM -->
     <div class="form">
       <div class="grp">
         <div class="ghead"><span class="gbar"></span><h2>이름</h2><span class="gen">Name</span></div>
@@ -294,8 +292,8 @@ const TYPES={sentinel:{ko:'센티넬',en:'SENTINEL',hanja:'戰衛',code:'SN'},gu
 const RANKS=[
   {code:'SS',ko:'키스톤',grade:'SS급'},
   {code:'S',ko:'세인트',grade:'S급'},
-  {code:'A',ko:'에이전트',grade:'A급'},
-  {code:'B',ko:'에이전트',grade:'B급'},
+  {code:'A',ko:'에이전트 A',grade:'A급'},
+  {code:'B',ko:'에이전트 B',grade:'B급'},
   {code:'C',ko:'캔디데이트',grade:'C급'},
 ];
 const DEPTS=[
@@ -428,22 +426,90 @@ function render(){
   buildBar(parseInt(S.suf,10)+S.series.id.length*7);
 }
 
-const dl=document.getElementById('download');
-dl.onclick=async()=>{
-  if(typeof html2canvas==='undefined'){foot('저장 모듈 로드 실패 — 네트워크 확인');return}
-  dl.disabled=true;foot('이미지 처리 중…');
-  const card=document.getElementById('card');
-  const wasTrim=card.classList.contains('show-trim');
-  card.classList.remove('show-trim');
-  try{
-    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-    const canvas=await html2canvas(card,{scale:4,backgroundColor:'#0B0C0F',useCORS:true,logging:false,imageTimeout:0});
-    const a=document.createElement('a');
-    a.download=`PLX_${(S.name.trim()||'unregistered').replace(/[^\w가-힣]+/g,'_')}_58x90.png`;
-    a.href=canvas.toDataURL('image/png');a.click();foot(`저장 완료 · ${canvas.width}×${canvas.height}px`);
-  }catch(e){foot('출력 오류 — 다시 시도');console.error(e)}
-  finally{if(wasTrim)card.classList.add('show-trim');dl.disabled=false;setTimeout(()=>foot(''),3200)}
+// ================= ARCH 방식 무결점 캡처 로직 (사진 화질 저하 완벽 해결판) =================
+const dl = document.getElementById('download');
+dl.onclick = async () => {
+  if (typeof html2canvas === 'undefined') { foot('저장 모듈 로드 실패 — 네트워크 확인'); return; }
+  dl.disabled = true; foot('고해상도 이미지 렌더링 중…');
+
+  const originalTarget = document.getElementById('card');
+  const wasTrim = originalTarget.classList.contains('show-trim');
+  originalTarget.classList.remove('show-trim'); // 캡처 시 재단선 일시 숨김
+
+  await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 400)); // 폰트 및 스타일 렌더링 대기
+
+  // 오프스크린 캡처 컨테이너 생성
+  const exportContainer = document.createElement('div');
+  exportContainer.style.position = 'fixed';
+  exportContainer.style.left = '-99999px';
+  exportContainer.style.top = '0';
+  exportContainer.style.width = originalTarget.offsetWidth + 'px';
+  exportContainer.style.height = originalTarget.offsetHeight + 'px';
+
+  const clone = originalTarget.cloneNode(true);
+  
+  // 3D 렌더링 충돌/버그를 막기 위해 스타일 리셋
+  clone.style.transform = 'none';
+  clone.style.position = 'static';
+  clone.style.boxShadow = 'none';
+  clone.style.margin = '0';
+  clone.style.filter = 'none';
+
+  // [🔥핵심 수정] html2canvas의 background-image 화질 저하 버그 우회
+  // 복제본의 사진 영역을 CSS 배경이 아닌 '실제 <img> 태그'로 변환하여 캡처합니다.
+  const clonePhoto = clone.querySelector('#cPhoto');
+  if (clonePhoto && S.photo) {
+    clonePhoto.style.backgroundImage = 'none';
+    clonePhoto.innerHTML = ''; // 내부 아이콘 및 텍스트 제거
+    clonePhoto.style.position = 'relative';
+    clonePhoto.style.overflow = 'hidden'; // 사진 삐져나옴 방지
+
+    const { W, H, s } = coverScale();
+    const bgW = IMG.natW * s * S.zoom;
+    const bgH = IMG.natH * s * S.zoom;
+
+    const img = document.createElement('img');
+    img.src = S.photo;
+    img.style.position = 'absolute';
+    img.style.width = bgW + 'px';
+    img.style.height = bgH + 'px';
+    img.style.left = S.panX + 'px';
+    img.style.top = S.panY + 'px';
+    img.style.maxWidth = 'none'; // CSS 간섭 방지
+    
+    clonePhoto.appendChild(img);
+  }
+
+  exportContainer.appendChild(clone);
+  document.body.appendChild(exportContainer);
+
+  try {
+    const canvas = await html2canvas(clone, {
+      scale: 4, // 4배율 기반 초고화질 스케일링 (강제 고정)
+      useCORS: true,
+      backgroundColor: '#0B0C0F',
+      imageTimeout: 0,
+      logging: false
+    });
+
+    const a = document.createElement('a');
+    a.download = `PLX_${(S.name.trim()||'unregistered').replace(/[^\w가-힣]+/g,'_')}_HQ.png`;
+    a.href = canvas.toDataURL('image/png', 1.0); // 압축률 없는 100% 품질
+    a.click();
+    
+    foot(`초고화질 저장 완료 · ${canvas.width}×${canvas.height}px`);
+  } catch (e) {
+    foot('출력 오류 — 다시 시도');
+    console.error(e);
+  } finally {
+    document.body.removeChild(exportContainer);
+    if (wasTrim) originalTarget.classList.add('show-trim'); // 재단선 복구
+    dl.disabled = false;
+    setTimeout(() => foot(''), 3200);
+  }
 };
+
 render();
 </script>
 </body>
