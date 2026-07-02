@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PARALLAX · 사원증</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg:#050607;
+    --card:#0B0C0F;
+    --ink:#EAEDF1;
+    --white:#FFFFFF;
+    --mute:#7E858F;
+    --faint:#565B64;
+    --dim:#2E323A;
+    --line:#1B1E24;
+    --line2:#252932;
+    --accent:#50C8E8;
+    --accent-soft:rgba(80,200,232,.12);
+    --kr:'Pretendard',system-ui,-apple-system,sans-serif;
+    --mono:'Share Tech Mono',ui-monospace,SFMono-Regular,monospace;
+    --hud:'Chakra Petch','Pretendard',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--kr);-webkit-font-smoothing:antialiased;line-height:1.5;letter-spacing:-.01em}
+  .app{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px) 40px}
+
+  header{padding:26px 2px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);margin-bottom:26px}
+  header .wm{font-family:var(--hud);font-size:16px;letter-spacing:.3em;font-weight:700;display:flex;align-items:center;gap:11px}
+  header .wm i{width:14px;height:2px;background:var(--accent);transition:background .4s}
+  header .flow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+
+  .layout{display:flex;flex-direction:column;gap:8px}
+  @media(min-width:900px){
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:clamp(32px,5vw,60px);align-items:start}
+    .form{order:1;min-width:0}
+    .stage{order:2;position:sticky;top:24px}
+  }
+
+  /* ================= CARD (print artboard 58×90mm) ================= */
+  .stage{margin-bottom:22px}
+  .stage-cap{font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--faint);text-align:center;margin-bottom:14px}
+  .card-wrap{display:flex;justify-content:center}
+  .card{
+    position:relative;width:343px;aspect-ratio:58/90;overflow:hidden;
+    background:var(--card);border:1px solid var(--line2);border-radius:12px;
+    box-shadow:0 24px 56px -28px rgba(0,0,0,.9);
+    padding:28px;display:flex;flex-direction:column;
+  }
+  .chd{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .chd .wm{font-family:var(--hud);font-size:20px;letter-spacing:.16em;font-weight:700;color:var(--white);line-height:1}
+  .chd .wm b{color:var(--accent);font-weight:700;transition:color .4s}
+  .chd .tag{font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase;margin-top:8px;display:block}
+  .chd .r{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+  .chd .r .hanja{font-size:16px;letter-spacing:.14em;color:var(--accent);line-height:1;font-weight:600;transition:color .4s}
+  .chd .r .status{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase}
+  .chd .r .status i{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 7px var(--accent);transition:background .4s}
+  .accent-rule{height:1.5px;margin-top:14px;background:linear-gradient(90deg,var(--accent),transparent 62%);transition:background .4s}
+
+  .photo{align-self:center;width:158px;aspect-ratio:4/5;margin:16px 0 2px;border-radius:8px;overflow:hidden;
+    background:#040506 center/cover no-repeat;border:1px solid var(--line2)}
+  .photo.has-img{cursor:grab;touch-action:none}
+  .photo.dragging{cursor:grabbing}
+  .photo .ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--dim);pointer-events:none}
+  .photo .ph svg{width:34px;height:34px;opacity:.6}
+  .photo .ph span{font-family:var(--mono);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase}
+
+  .fld{margin-top:13px}
+  .fld .l{font-family:var(--mono);font-size:8px;letter-spacing:.15em;color:var(--faint);text-transform:uppercase;margin-bottom:4px}
+  .fld .v{font-family:var(--hud);font-size:14px;font-weight:600;color:var(--ink);line-height:1.15;word-break:break-word}
+  .fld .v.big{font-size:19px;font-weight:700;color:var(--white)}
+  .fld .v.acc{color:var(--accent);transition:color .4s}
+  .fld .v .sm{font-family:var(--mono);font-size:9px;font-weight:400;color:var(--faint);margin-left:5px;letter-spacing:.05em}
+  .fld .v.ser{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.06em;color:var(--ink)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .spacer{flex:1;min-height:10px}
+  .barcode{display:flex;align-items:stretch;gap:2px;height:22px;margin-top:14px;opacity:.85}
+  .barcode i{display:block;background:var(--ink)}
+
+  .trim{position:absolute;top:5.9px;left:5.9px;right:5.9px;bottom:5.9px;border:1px dashed rgba(255,255,255,.18);border-radius:8px;pointer-events:none;display:none}
+  .card.show-trim .trim{display:block}
+
+  .spec{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--faint);text-align:center;margin-top:14px}
+  .gtoggle{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;font-family:var(--kr);font-size:12px;color:var(--mute);cursor:pointer;user-select:none}
+  .gtoggle input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+
+  .dl{width:100%;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:9px;
+    background:var(--accent);color:#04060A;border:none;border-radius:9px;cursor:pointer;
+    font-family:var(--mono);font-size:12px;letter-spacing:.13em;text-transform:uppercase;padding:15px;transition:filter .2s,transform .06s,background .4s}
+  .dl:hover{filter:brightness(1.1)}
+  .dl:active{transform:translateY(1px)}
+  .dl:disabled{opacity:.5;cursor:progress}
+  .dl:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .dl svg{width:15px;height:15px}
+  .foot{text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;margin-top:10px;min-height:13px}
+
+  /* ================= FORM ================= */
+  .form{min-width:0}
+  .grp{margin-bottom:24px}
+  .ghead{display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--line);padding-bottom:11px;margin-bottom:14px}
+  .ghead .gbar{width:3px;height:13px;border-radius:2px;background:var(--accent);transition:background .4s}
+  .ghead h2{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:.01em}
+  .ghead .gen{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
+
+  input[type=text]{width:100%;background:#0A0B0E;border:1px solid var(--line2);border-radius:9px;color:var(--ink);
+    font-family:var(--kr);font-size:16px;padding:14px 15px;transition:border-color .18s,box-shadow .18s,background .18s}
+  input[type=text]::placeholder{color:var(--dim)}
+  input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:#0D0F13}
+
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .chips{display:grid;gap:9px}
+  .chips.c3{grid-template-columns:repeat(3,1fr)}
+  .chips.c2{grid-template-columns:repeat(2,1fr)}
+  .opt{min-height:48px;display:flex;flex-direction:column;justify-content:center;gap:3px;background:#0A0B0E;border:1px solid var(--line2);
+    border-radius:9px;padding:10px 13px;cursor:pointer;color:var(--mute);font-family:var(--kr);text-align:left;transition:border-color .16s,color .16s,background .16s}
+  .opt:hover{border-color:var(--faint);color:var(--ink)}
+  .opt .t{font-size:14px;font-weight:600;color:inherit;display:flex;align-items:center;gap:8px}
+  .opt .t .sw{width:8px;height:8px;border-radius:50%;flex:none;opacity:.55;transition:opacity .2s}
+  .opt .s{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;color:var(--faint);text-transform:uppercase}
+  .opt[aria-pressed=true]{border-color:var(--accent);color:var(--ink);background:linear-gradient(180deg,var(--accent-soft),transparent),#0A0B0E}
+  .opt[aria-pressed=true] .t .sw{opacity:1}
+  .opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .up{display:flex;align-items:center;gap:14px;background:#0A0B0E;border:1px dashed var(--line2);border-radius:10px;padding:14px;cursor:pointer;transition:border-color .18s,background .18s}
+  .up:hover,.up.over{border-color:var(--accent);background:var(--accent-soft)}
+  .up .th{width:42px;height:52px;border-radius:5px;background:#050607 center/cover no-repeat;border:1px solid var(--line2);flex:none;display:grid;place-items:center;color:var(--faint)}
+  .up .th svg{width:21px;height:21px}
+  .up .tx{font-size:13px;color:var(--mute)}
+  .up .tx b{color:var(--ink);font-weight:600;display:block;margin-bottom:2px}
+  .up .tx span{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--faint);text-transform:uppercase}
+  .txt-btn{background:none;border:none;color:var(--mute);font-family:var(--kr);font-size:11px;font-weight:500;cursor:pointer;padding:7px 2px;transition:color .2s}
+  .txt-btn:hover{color:var(--accent)}
+  .txt-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  /* photo zoom control */
+  .zoombox{margin-top:11px;background:#0A0B0E;border:1px solid var(--line2);border-radius:9px;padding:13px 14px}
+  .zoombox.dis{opacity:.45;pointer-events:none}
+  .zoombox .zhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .zoombox .zhead .zl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--line2);border-radius:2px;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);box-shadow:0 0 0 1px var(--accent);transition:background .4s}
+  input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:5px}
+  .zhint{font-family:var(--kr);font-size:11px;color:var(--faint);margin-top:9px}
+
+  .serial-row{display:flex;align-items:center;justify-content:space-between;background:#0A0B0E;border:1px solid var(--line2);border-radius:9px;padding:13px 15px}
+  .serial-row .v{font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:var(--ink)}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="wm"><i></i>PARALLAX</span>
+    <span class="flow">流歪 · PLX</span>
+  </header>
+
+  <div class="layout">
+    <!-- STAGE -->
+    <div class="stage">
+      <div class="stage-cap">— Preview —</div>
+      <div class="card-wrap">
+        <div class="card" id="card">
+          <div class="chd">
+            <div class="l">
+              <div class="wm">PARA<b>LL</b>AX</div>
+              <span class="tag">Sentinel Verse · PLX</span>
+            </div>
+            <div class="r">
+              <span class="hanja" id="cHanja">戰衛</span>
+              <span class="status"><i></i>Stable</span>
+            </div>
+          </div>
+          <div class="accent-rule"></div>
+
+          <div class="photo" id="cPhoto">
+            <div class="ph" id="cPh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="9" r="3.6"/><path d="M4 20c1.3-3.9 4.3-5.8 8-5.8S18.7 16.1 20 20"/></svg>
+              <span>No Image</span>
+            </div>
+          </div>
+
+          <div class="fld"><div class="l">이름 · Name</div><div class="v big" id="cName">UNREGISTERED</div></div>
+
+          <div class="two">
+            <div class="fld"><div class="l">유형 · Type</div><div class="v" id="cType">센티넬</div></div>
+            <div class="fld"><div class="l">직급 · Rank</div><div class="v acc" id="cRank">키스톤 <span class="sm">SS급</span></div></div>
+          </div>
+          <div class="two">
+            <div class="fld"><div class="l">계열 · Element</div><div class="v acc" id="cSeries">빙결 <span class="sm">FROST</span></div></div>
+            <div class="fld"><div class="l">부서 · Dept</div><div class="v" id="cDept">컨덕트</div></div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="fld"><div class="l">발급번호 · Serial</div><div class="v ser" id="cSerial">PLX·SN·SS·0000</div></div>
+          <div class="barcode" id="cBar"></div>
+
+          <div class="trim"></div>
+        </div>
+      </div>
+
+      <div class="spec">작업 58 × 90 mm · 재단 54 × 86 mm · 300 DPI</div>
+      <label class="gtoggle"><input type="checkbox" id="trimToggle"> 재단 가이드 표시</label>
+
+      <button class="dl" id="download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12m0 0 4-4m-4 4-4-4M4 20h16"/></svg>
+        PNG 저장 · 300DPI
+      </button>
+      <div class="foot" id="foot"></div>
+    </div>
+
+    <!-- FORM -->
+    <div class="form">
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>이름</h2><span class="gen">Name</span></div>
+        <input type="text" id="name" maxlength="18" placeholder="이름 또는 코드네임" autocomplete="off">
+      </div>
+
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>유형</h2><span class="gen">Type</span></div>
+        <div class="seg" id="typeSeg">
+          <button class="opt" data-type="sentinel" aria-pressed="true"><span class="t">센티넬</span><span class="s">Sentinel · 戰衛</span></button>
+          <button class="opt" data-type="guide" aria-pressed="false"><span class="t">가이드</span><span class="s">Guide · 導者</span></button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>계열</h2><span class="gen">Element</span></div>
+        <div class="chips c3" id="seriesWrap"></div>
+      </div>
+
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>직급</h2><span class="gen">Rank</span></div>
+        <div class="chips c2" id="rankWrap"></div>
+      </div>
+
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>부서</h2><span class="gen">Dept</span></div>
+        <div class="chips c2" id="deptWrap"></div>
+      </div>
+
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>사진</h2><span class="gen">Portrait</span></div>
+        <div class="up" id="up" tabindex="0" role="button" aria-label="사진 업로드">
+          <div class="th" id="upTh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4S18.3 16.4 19.5 20"/></svg></div>
+          <div class="tx"><b>사진 업로드</b><span>JPG · PNG · WEBP</span></div>
+        </div>
+        <div class="zoombox dis" id="zoombox">
+          <div class="zhead"><span class="zl">확대 / 축소</span><button class="txt-btn" id="resetPhoto" style="padding:0">위치 초기화</button></div>
+          <input type="range" id="zoom" min="1" max="3" step="0.01" value="1">
+          <div class="zhint">사진을 드래그해 위치를 조정할 수 있어요.</div>
+        </div>
+        <div style="text-align:right"><button class="txt-btn" id="clearPhoto">사진 제거</button></div>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+
+      <div class="grp">
+        <div class="ghead"><span class="gbar"></span><h2>발급번호</h2><span class="gen">Serial</span></div>
+        <div class="serial-row">
+          <span class="v" id="serial">PLX·SN·SS·0000</span>
+          <button class="txt-btn" id="reissue" style="padding:2px 4px;color:var(--accent)">재발급</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERIES={
+  sentinel:[
+    {id:'flame',ko:'화염',en:'FLAME',color:'#FF4D30'},
+    {id:'thunder',ko:'뇌전',en:'THUNDER',color:'#FFB81C'},
+    {id:'flora',ko:'초목',en:'FLORA',color:'#3CB371'},
+    {id:'gale',ko:'풍압',en:'GALE',color:'#48D1CC'},
+    {id:'current',ko:'수류',en:'CURRENT',color:'#3A8DFF'},
+    {id:'frost',ko:'빙결',en:'FROST',color:'#50C8E8'},
+  ],
+  guide:[
+    {id:'void',ko:'공허',en:'VOID',color:'#8A92A6'},
+    {id:'umbra',ko:'암영',en:'UMBRA',color:'#8A6EE0'},
+    {id:'lumen',ko:'광휘',en:'LUMEN',color:'#F2C94C'},
+    {id:'nexus',ko:'결속',en:'NEXUS',color:'#F0548D'},
+  ]
+};
+const TYPES={sentinel:{ko:'센티넬',en:'SENTINEL',hanja:'戰衛',code:'SN'},guide:{ko:'가이드',en:'GUIDE',hanja:'導者',code:'GD'}};
+const RANKS=[
+  {code:'SS',ko:'키스톤',grade:'SS급'},
+  {code:'S',ko:'세인트',grade:'S급'},
+  {code:'A',ko:'에이전트 A',grade:'A급'},
+  {code:'B',ko:'에이전트 B',grade:'B급'},
+  {code:'C',ko:'캔디데이트',grade:'C급'},
+];
+const DEPTS=[
+  {id:'conduct',ko:'컨덕트',en:'CONDUCT',desc:'운용·관리'},
+  {id:'trace',ko:'트레이스',en:'TRACE',desc:'분석·추적'},
+  {id:'intervention',ko:'인터벤션',en:'INTERVENTION',desc:'회수·제압'},
+  {id:'recovery',ko:'리커버리',en:'RECOVERY',desc:'제거·처리'},
+];
+
+const S={type:'sentinel',series:SERIES.sentinel[5],rank:RANKS[0],dept:DEPTS[0],name:'',photo:null,suf:suf(),zoom:1,panX:0,panY:0};
+const IMG={natW:0,natH:0};
+function suf(){return String(Math.floor(Math.random()*10000)).padStart(4,'0')}
+function hexA(h,a){const n=parseInt(h.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
+
+const seriesWrap=document.getElementById('seriesWrap'),rankWrap=document.getElementById('rankWrap'),deptWrap=document.getElementById('deptWrap');
+function press(w,a){[...w.children].forEach(c=>c.setAttribute('aria-pressed',c===a))}
+function buildSeries(){
+  seriesWrap.innerHTML='';
+  SERIES[S.type].forEach(s=>{
+    const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed',S.series.id===s.id);
+    b.innerHTML=`<span class="t"><span class="sw" style="background:${s.color}"></span>${s.ko}</span><span class="s">${s.en}</span>`;
+    b.onclick=()=>{S.series=s;press(seriesWrap,b);render()};seriesWrap.appendChild(b);
+  });
+}
+RANKS.forEach(r=>{const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed',S.rank.code===r.code);
+  b.innerHTML=`<span class="t">${r.ko}</span><span class="s">${r.grade}</span>`;b.onclick=()=>{S.rank=r;press(rankWrap,b);render()};rankWrap.appendChild(b)});
+DEPTS.forEach(d=>{const b=document.createElement('button');b.className='opt';b.setAttribute('aria-pressed',S.dept.id===d.id);
+  b.innerHTML=`<span class="t">${d.ko}</span><span class="s">${d.desc}</span>`;b.onclick=()=>{S.dept=d;press(deptWrap,b);render()};deptWrap.appendChild(b)});
+buildSeries();
+
+document.querySelectorAll('#typeSeg .opt').forEach(b=>b.onclick=()=>{
+  S.type=b.dataset.type;document.querySelectorAll('#typeSeg .opt').forEach(c=>c.setAttribute('aria-pressed',c===b));
+  S.series=SERIES[S.type][0];buildSeries();render();
+});
+document.getElementById('name').addEventListener('input',e=>{S.name=e.target.value;render()});
+document.getElementById('reissue').onclick=()=>{S.suf=suf();render()};
+document.getElementById('trimToggle').addEventListener('change',e=>{document.getElementById('card').classList.toggle('show-trim',e.target.checked)});
+
+/* ---------- photo : upload / zoom / pan ---------- */
+const fileInput=document.getElementById('file'),up=document.getElementById('up'),upTh=document.getElementById('upTh');
+const cPhoto=document.getElementById('cPhoto'),cPh=document.getElementById('cPh');
+const zoomBox=document.getElementById('zoombox'),zoomSlider=document.getElementById('zoom');
+up.onclick=()=>fileInput.click();
+up.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileInput.click()}};
+['dragover','dragenter'].forEach(ev=>up.addEventListener(ev,e=>{e.preventDefault();up.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>up.addEventListener(ev,e=>{e.preventDefault();up.classList.remove('over')}));
+up.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)load(f)});
+fileInput.addEventListener('change',e=>{const f=e.target.files[0];if(f)load(f)});
+
+function coverScale(){const W=cPhoto.clientWidth,H=cPhoto.clientHeight;return{W,H,s:Math.max(W/IMG.natW,H/IMG.natH)}}
+function applyPhoto(){
+  if(!S.photo||!IMG.natW){cPhoto.style.backgroundImage='';return}
+  const {W,H,s}=coverScale();
+  const bgW=IMG.natW*s*S.zoom, bgH=IMG.natH*s*S.zoom;
+  S.panX=Math.min(0,Math.max(W-bgW,S.panX));
+  S.panY=Math.min(0,Math.max(H-bgH,S.panY));
+  cPhoto.style.backgroundImage=`url(${S.photo})`;
+  cPhoto.style.backgroundRepeat='no-repeat';
+  cPhoto.style.backgroundSize=`${bgW}px ${bgH}px`;
+  cPhoto.style.backgroundPosition=`${S.panX}px ${S.panY}px`;
+}
+function load(f){
+  if(!f.type.startsWith('image/')){foot('지원되지 않는 파일 형식');return}
+  const r=new FileReader();
+  r.onload=()=>{
+    S.photo=r.result;
+    const im=new Image();
+    im.onload=()=>{
+      IMG.natW=im.naturalWidth;IMG.natH=im.naturalHeight;S.zoom=1;zoomSlider.value=1;
+      const {W,H,s}=coverScale();
+      S.panX=(W-IMG.natW*s)/2;S.panY=(H-IMG.natH*s)/2;
+      upTh.style.backgroundImage=`url(${S.photo})`;upTh.innerHTML='';
+      cPh.style.display='none';cPhoto.classList.add('has-img');zoomBox.classList.remove('dis');
+      applyPhoto();
+    };
+    im.src=r.result;
+  };
+  r.readAsDataURL(f);
+}
+function setZoom(z){
+  if(!IMG.natW){S.zoom=z;return}
+  const {W,H,s}=coverScale();
+  const oldW=IMG.natW*s*S.zoom, oldH=IMG.natH*s*S.zoom;
+  const fx=(W/2-S.panX)/oldW, fy=(H/2-S.panY)/oldH;
+  S.zoom=z;
+  const newW=IMG.natW*s*z, newH=IMG.natH*s*z;
+  S.panX=W/2-fx*newW; S.panY=H/2-fy*newH;
+  applyPhoto();
+}
+zoomSlider.addEventListener('input',e=>setZoom(parseFloat(e.target.value)));
+cPhoto.addEventListener('wheel',e=>{if(!S.photo)return;e.preventDefault();
+  let z=Math.min(3,Math.max(1,S.zoom+(e.deltaY<0?0.08:-0.08)));zoomSlider.value=z.toFixed(2);setZoom(z)},{passive:false});
+
+let drag=null;
+cPhoto.addEventListener('pointerdown',e=>{if(!S.photo)return;drag={x:e.clientX,y:e.clientY};cPhoto.setPointerCapture(e.pointerId);cPhoto.classList.add('dragging')});
+cPhoto.addEventListener('pointermove',e=>{if(!drag)return;S.panX+=e.clientX-drag.x;S.panY+=e.clientY-drag.y;drag={x:e.clientX,y:e.clientY};applyPhoto()});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>cPhoto.addEventListener(ev,()=>{drag=null;cPhoto.classList.remove('dragging')}));
+
+document.getElementById('resetPhoto').onclick=()=>{
+  if(!IMG.natW)return;S.zoom=1;zoomSlider.value=1;const {W,H,s}=coverScale();
+  S.panX=(W-IMG.natW*s)/2;S.panY=(H-IMG.natH*s)/2;applyPhoto();
+};
+document.getElementById('clearPhoto').onclick=()=>{
+  S.photo=null;IMG.natW=0;IMG.natH=0;S.zoom=1;zoomSlider.value=1;
+  cPhoto.style.backgroundImage='';cPhoto.classList.remove('has-img');zoomBox.classList.add('dis');
+  upTh.style.backgroundImage='';
+  upTh.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4S18.3 16.4 19.5 20"/></svg>';
+  cPh.style.display='flex';
+};
+
+/* ---------- render ---------- */
+function serial(){return`PLX·${TYPES[S.type].code}·${S.rank.code}·${S.suf}`}
+function foot(t){document.getElementById('foot').textContent=t}
+function buildBar(seed){
+  const w=document.getElementById('cBar');w.innerHTML='';let x=(seed*2654435761)>>>0;const rnd=()=>((x=(x*1664525+1013904223)>>>0)/4294967296);
+  for(let i=0;i<44;i++){const b=document.createElement('i');b.style.flex=(.4+rnd()*2.1).toFixed(2);b.style.opacity=(.35+rnd()*.55).toFixed(2);w.appendChild(b)}
+}
+function render(){
+  const c=S.series.color,t=TYPES[S.type];
+  document.documentElement.style.setProperty('--accent',c);
+  document.documentElement.style.setProperty('--accent-soft',hexA(c,.12));
+  document.getElementById('cHanja').textContent=t.hanja;
+  document.getElementById('cName').textContent=S.name.trim()||'UNREGISTERED';
+  document.getElementById('cType').textContent=t.ko;
+  document.getElementById('cRank').innerHTML=`${S.rank.ko} <span class="sm">${S.rank.grade}</span>`;
+  document.getElementById('cSeries').innerHTML=`${S.series.ko} <span class="sm">${S.series.en}</span>`;
+  document.getElementById('cDept').textContent=S.dept.ko;
+  document.getElementById('cSerial').textContent=serial();
+  document.getElementById('serial').textContent=serial();
+  buildBar(parseInt(S.suf,10)+S.series.id.length*7);
+}
+
+const dl=document.getElementById('download');
+dl.onclick=async()=>{
+  if(typeof html2canvas==='undefined'){foot('저장 모듈 로드 실패 — 네트워크 확인');return}
+  dl.disabled=true;foot('이미지 처리 중…');
+  const card=document.getElementById('card');
+  const wasTrim=card.classList.contains('show-trim');
+  card.classList.remove('show-trim');
+  try{
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const canvas=await html2canvas(card,{scale:2,backgroundColor:'#0B0C0F',useCORS:true,logging:false});
+    const a=document.createElement('a');
+    a.download=`PLX_${(S.name.trim()||'unregistered').replace(/[^\w가-힣]+/g,'_')}_58x90.png`;
+    a.href=canvas.toDataURL('image/png');a.click();foot(`저장 완료 · ${canvas.width}×${canvas.height}px`);
+  }catch(e){foot('출력 오류 — 다시 시도');console.error(e)}
+  finally{if(wasTrim)card.classList.add('show-trim');dl.disabled=false;setTimeout(()=>foot(''),3200)}
+};
+render();
+</script>
+</body>
+</html>
